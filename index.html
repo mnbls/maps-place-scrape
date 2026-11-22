@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pengambil Data Tempat</title>
+<script>
+  // Aplikasi hanya jalan di komputer sendiri (butuh server dan Chrome). Di GitHub Pages arahkan ke halaman panduan.
+  if (!/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) location.replace("docs/");
+</script>
 <style>
   :root {
     --bg: #f6f7f9; --card: #fff; --text: #1c2430; --muted: #6a7585; --line: #e3e7ee;
@@ -112,7 +116,12 @@ async function api(path, body) {
   const res = await fetch(path, body ? {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
   } : undefined);
-  const data = await res.json();
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error("Server tidak menjawab dengan benar. Jalankan start.bat dan buka halaman lewat http://localhost:3737.");
+  }
   if (!res.ok) throw new Error(data.error || "Terjadi kesalahan");
   return data;
 }
