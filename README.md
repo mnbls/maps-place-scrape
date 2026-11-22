@@ -15,7 +15,8 @@ Halaman itu hanya panduan; aplikasinya tetap dijalankan di komputer sendiri kare
 1. Pasang [Node.js](https://nodejs.org) versi LTS dan pastikan Chrome atau Edge ada di komputer.
 2. Di halaman GitHub repo ini, klik **Code > Download ZIP**, lalu ekstrak.
 3. Klik dua kali `start.bat`. Pertama kali akan memasang kebutuhan sendiri (1-2 menit), lalu browser terbuka di `http://localhost:3737`.
-4. Isi jenis tempat dan wilayah (satu kecamatan per pencarian), klik **Cari**. Chrome terbuka sendiri, jangan ditutup sampai selesai.
+4. Isi jenis tempat, **kecamatan**, dan **kabupaten/kota** (minimal salah satu), lalu klik **Cari**. Chrome terbuka sendiri, jangan ditutup sampai selesai.
+   Tempat yang alamatnya jelas di luar kecamatan/kabupaten itu otomatis dibuang (bisa dimatikan lewat kotak centang).
 5. Hasil tersimpan otomatis di folder `hasil/`, dan bisa diunduh lewat tombol **Unduh Excel**.
 
 Satu kecamatan dengan "coffee" memakan sekitar 10-30 menit. Kalau Google meminta verifikasi (CAPTCHA), selesaikan di jendela Chrome.
@@ -25,8 +26,9 @@ Satu kecamatan dengan "coffee" memakan sekitar 10-30 menit. Kalau Google meminta
 ```bash
 npm install
 node server.mjs                                  # lalu buka http://localhost:3737
-node scrape.mjs "coffee" "Mlati Sleman"          # langsung ke file Excel di hasil/
-node scrape.mjs "salon" "Depok Sleman" --maks=40 # batasi 40 tempat per kata kunci
+node scrape.mjs "coffee" --kecamatan=Ceper --kabupaten=Klaten          # langsung ke file Excel di hasil/
+node scrape.mjs "salon" --kecamatan=Mlati --kabupaten=Sleman --maks=40  # batasi 40 tempat per kata kunci
+node scrape.mjs "coffee" --kabupaten=Klaten --semua                     # satu kabupaten, jangan buang yang di luar wilayah
 ```
 
 Tanpa `--maks`, semua yang muncul di Maps diambil, dihitung per kata kunci.
@@ -34,7 +36,7 @@ Tanpa `--maks`, semua yang muncul di Maps diambil, dihitung per kata kunci.
 ## Isi Excel
 
 - **Data Mentah**: teks asli dari Maps (alamat, telepon, website, rating dan jam dalam bentuk teks), untuk bukti.
-- **Data Bersih**: `nama_maps, kategori, wilayah, harga_min, harga_max, rating, jumlah_ulasan, lat, lng, bisa_di_tempat, buka_24_jam`,
+- **Data Bersih**: `nama_maps, kategori, kecamatan, kabupaten, sesuai_wilayah, harga_min, harga_max, rating, jumlah_ulasan, lat, lng, bisa_di_tempat, buka_24_jam`,
   jam buka dan tutup tiap hari (`senin_buka` ... `minggu_tutup`), `alamat`, `ditemukan_via`, `link_maps`.
   Jam disimpan sebagai angka berformat `jam:menit`; jam tutup di atas 24:00 (mis. 26:00) berarti lewat tengah malam.
 - **Keterangan**: tanggal pengambilan, kata kunci, sumber, arti kolom, dan batasan.
@@ -45,6 +47,8 @@ Tanpa `--maks`, semua yang muncul di Maps diambil, dihitung per kata kunci.
   dan opsi makan di tempat. Kolomnya tetap ada; `bisa_di_tempat` berisi `Tidak diketahui` (tidak pernah ditebak).
 - Hasil adalah tempat yang tampil di Maps untuk pencarian itu, bukan jaminan seluruh tempat di wilayah. Satu pencarian Maps dibatasi
   sekitar 60-120 hasil; untuk wilayah padat, cari per kecamatan atau desa.
+- `kecamatan` dan `kabupaten` dibaca dari **alamat asli** tiap tempat, bukan dari teks yang diketik. `sesuai_wilayah` = Ya / Tidak / Tidak diketahui
+  (alamat tanpa kecamatan/kabupaten tidak dibuang). Kecamatan dicocokkan bersama kabupaten, jadi "Depok" di kabupaten lain tidak lolos.
 - Sel kosong berarti Maps tidak menampilkan datanya (mis. jam buka yang tidak diisi pemilik).
 - Scraping langsung melanggar ketentuan layanan Google Maps. Sebutkan itu di bagian metode bila dipakai di laporan.
 - Tampilan Maps bisa berubah; bila ada kolom yang mendadak kosong, selektor di `browser.mjs` perlu disesuaikan.

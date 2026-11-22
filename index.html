@@ -25,7 +25,10 @@
   h1 { font-size: 22px; margin: 0 0 4px; }
   .sub { color: var(--muted); margin: 0 0 20px; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-  form { display: grid; grid-template-columns: 1fr 1fr 160px auto; gap: 12px; align-items: end; }
+  form { display: grid; grid-template-columns: 1.1fr 1fr 1fr 150px auto; gap: 12px; align-items: end; }
+  .check { grid-column: 1 / -1; display: flex; gap: 8px; align-items: flex-start; font-size: 14px; margin: 0; }
+  .check input { margin-top: 4px; }
+  code { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; }
   label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
   input[type=text], input[type=number] {
     width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line);
@@ -63,14 +66,22 @@
         <input type="text" id="jenis" value="coffee" placeholder="mis. coffee, salon, bengkel" required>
       </div>
       <div>
-        <label for="wilayah">Wilayah (kecamatan / kabupaten)</label>
-        <input type="text" id="wilayah" placeholder="mis. Mlati Sleman" required>
+        <label for="kecamatan">Kecamatan</label>
+        <input type="text" id="kecamatan" placeholder="mis. Ceper">
+      </div>
+      <div>
+        <label for="kabupaten">Kabupaten / Kota</label>
+        <input type="text" id="kabupaten" placeholder="mis. Klaten">
       </div>
       <div>
         <label for="maks">Maks. per kata kunci</label>
         <input type="number" id="maks" min="1" placeholder="kosong = semua">
       </div>
       <button type="submit" id="go">Cari</button>
+      <label class="check">
+        <input type="checkbox" id="saring" checked>
+        Buang tempat yang alamatnya di luar kecamatan/kabupaten ini (disarankan). Kalau dimatikan, semua tetap disimpan dan ditandai di kolom <code>sesuai_wilayah</code>.
+      </label>
       <p class="note">
         Mengetik <strong>coffee</strong> atau <strong>kopi</strong> otomatis mencari "coffee shop", "kafe", dan "kedai kopi", lalu menggabungkan hasilnya.
         Chrome akan terbuka sendiri, jangan ditutup sampai selesai. Satu kecamatan bisa memakan 10-30 menit.
@@ -92,7 +103,7 @@
       <table>
         <thead>
           <tr>
-            <th>Nama Maps</th><th>Kategori</th><th>Rating</th><th>Ulasan</th><th>Koordinat</th>
+            <th>Nama Maps</th><th>Kategori</th><th>Kecamatan</th><th>Kabupaten/Kota</th><th>Sesuai</th><th>Rating</th><th>Ulasan</th><th>Koordinat</th>
             <th>Harga</th><th>Jam (Senin)</th><th>24 jam</th><th>Di tempat</th><th>Via</th>
           </tr>
         </thead>
@@ -143,7 +154,7 @@ function render(rows) {
     a.href = r.link_maps; a.target = "_blank"; a.rel = "noopener"; a.textContent = r.nama;
     name.append(a);
     tr.append(
-      name, cell(r.kategori), cell(r.rating, "num"), cell(r.jumlah_ulasan, "num"),
+      name, cell(r.kategori), cell(r.kecamatan), cell(r.kabupaten), cell(r.sesuai_wilayah), cell(r.rating, "num"), cell(r.jumlah_ulasan, "num"),
       cell(r.lat === "" ? "" : r.lat.toFixed(5) + ", " + r.lng.toFixed(5)),
       cell(r.harga_min === "" ? "" : r.harga_min.toLocaleString("id-ID") + "–" + r.harga_max.toLocaleString("id-ID")),
       cell(r.jam), cell(r.buka_24_jam), cell(r.bisa_di_tempat), cell(r.via),
@@ -163,19 +174,25 @@ $("searchForm").addEventListener("submit", async (e) => {
   msg("Memulai pencarian...");
   try {
     const maks = Number($("maks").value) || undefined;
-    ({ id: jobId } = await api("/api/search", { jenis: $("jenis").value.trim(), wilayah: $("wilayah").value.trim(), maks }));
+    const kecamatan = $("kecamatan").value.trim(), kabupaten = $("kabupaten").value.trim();
+    if (!kecamatan && !kabupaten) throw new Error("Isi minimal kecamatan atau kabupaten/kota.");
+    ({ id: jobId } = await api("/api/search", {
+      jenis: $("jenis").value.trim(), kecamatan, kabupaten, maks, saring: $("saring").checked,
+    }));
     for (;;) {
       await sleep(2000);
       const job = await api("/api/job?id=" + jobId);
       if (job.total) {
         $("result").classList.remove("hidden");
-        $("count").textContent = job.total + " tempat terbaca" + (job.status === "running" ? " (masih berjalan)" : "");
+        $("count").textContent = job.total + " tempat diterima" +
+          (job.dibuang ? ", " + job.dibuang + " dibuang karena di luar wilayah" : "") +
+          (job.status === "running" ? " (masih berjalan)" : "");
         render(job.rows);
       }
       if (job.status === "running") { msg(job.progress); continue; }
       $("fileNote").textContent = job.file ? "Tersimpan otomatis di: " + job.file : "";
       if (job.status === "error") msg("Berhenti: " + job.error + (job.total ? ". Hasil sebagian tetap bisa diunduh." : ""), true);
-      else msg(job.total ? "Selesai." : "Tidak ada hasil. Coba kata kunci atau wilayah lain.");
+      else msg(job.total ? "Selesai." : "Tidak ada hasil" + (job.dibuang ? " (" + job.dibuang + " tempat dibuang karena di luar wilayah)" : "") + ". Coba kata kunci atau wilayah lain.");
       break;
     }
   } catch (err) { msg(err.message, true); }

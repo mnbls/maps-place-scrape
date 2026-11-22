@@ -1,4 +1,5 @@
-// Versi terminal. Pakai: node scrape.mjs "<jenis>" "<wilayah>" [--maks=N]
+// Versi terminal. Pakai: node scrape.mjs "<jenis>" --kecamatan=<nama> --kabupaten=<nama> [--maks=N] [--semua]
+// --semua = jangan buang tempat di luar wilayah (tetap ditandai di kolom sesuai_wilayah).
 // Hasil disimpan sebagai Excel di folder hasil/. Untuk tampilan web: start.bat (atau node server.mjs).
 
 import { writeFileSync } from "node:fs";
@@ -19,19 +20,24 @@ const args = process.argv.slice(2);
 const flags = args.filter((a) => a.startsWith("--"));
 const positional = args.filter((a) => !a.startsWith("--"));
 
+const flag = (nama) => flags.find((f) => f.startsWith(`--${nama}=`))?.slice(nama.length + 3);
 const jenis = positional[0] ?? (await ask("Jenis tempat (mis. coffee, salon): "));
-const wilayah = positional[1] ?? (await ask("Wilayah (mis. Mlati Sleman): "));
-if (!jenis || !wilayah) {
-  console.error("Jenis tempat dan wilayah wajib diisi.");
+const kecamatan = flag("kecamatan") ?? (flags.length || positional.length > 1 ? "" : await ask("Kecamatan (boleh kosong): "));
+const kabupaten = flag("kabupaten") ?? (flags.length || positional.length > 1 ? "" : await ask("Kabupaten/Kota: "));
+if (!jenis || (!kecamatan && !kabupaten)) {
+  console.error("Isi jenis tempat dan minimal kecamatan atau kabupaten. Contoh: node scrape.mjs \"coffee\" --kecamatan=Ceper --kabupaten=Klaten");
   process.exit(1);
 }
-const maks = Number(flags.find((f) => f.startsWith("--maks="))?.split("=")[1]) || undefined;
+const maks = Number(flag("maks")) || undefined;
+const saring = !flags.includes("--semua");
 
 try {
-  const { rows, keywords, tanggal } = await searchBrowser({ jenis, wilayah, maks, onProgress: console.log });
-  const out = join(ensureHasilDir(), `${slug(jenis)}-${slug(wilayah)}.xlsx`);
-  writeFileSync(out, await buildXlsx(rows, { jenis, wilayah, keywords, tanggal }));
-  console.log(`Selesai: ${rows.length} tempat -> ${out}`);
+  const hasil = await searchBrowser({ jenis, kecamatan, kabupaten, maks, saring, onProgress: console.log });
+  const meta = { jenis, kecamatan, kabupaten, keywords: hasil.keywords, tanggal: hasil.tanggal, dibuang: hasil.dibuang, saring };
+  const nama = [jenis, kecamatan, kabupaten].filter(Boolean).map(slug).join("-");
+  const out = join(ensureHasilDir(), `${nama}.xlsx`);
+  writeFileSync(out, await buildXlsx(hasil.rows, meta));
+  console.log(`Selesai: ${hasil.rows.length} tempat diterima, ${hasil.dibuang} dibuang di luar wilayah -> ${out}`);
 } catch (err) {
   console.error("Gagal:", err.message);
   process.exit(1);

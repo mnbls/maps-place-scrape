@@ -28,6 +28,11 @@ keputusan fuzzy. Metode fuzzy-nya belum ditentukan dan dihitung pengguna sendiri
   - Bug diperbaiki: nama jadi "Jam Buka" dan rating kosong (urutan baca vs klik jam).
   - Uji nyata via tampilan web: "coffee" di Mlati Sleman, maks 4/kata kunci → 8 tempat unik, Excel valid, tersimpan otomatis di `hasil/`.
 
+- **2026-11-22 (lanjutan)** Halaman panduan GitHub Pages di `docs/`; `index.html` di luar localhost dialihkan ke `docs/` (Pages pernah diatur dari root dan tombol Cari error `Unexpected token '<'`).
+- **2026-11-22 (wilayah)** Pengguna melihat kolom `wilayah` = "ceper" di semua baris padahal ada tempat di luar Ceper/Klaten. Perbaikan: input dipisah **kecamatan** dan **kabupaten/kota**,
+  query "kata Kecamatan X Kabupaten", kolom `kecamatan`/`kabupaten` dibaca dari alamat, `sesuai_wilayah`, dan saringan (bisa dimatikan; `--semua` di CLI).
+  Uji: "coffee" Ceper Klaten maks 6/kata kunci → 9 diterima (8 Ya, 1 Tidak diketahui), 3 dibuang. Parser: 13 uji lulus.
+
 ## Temuan penting: "tampilan terbatas"
 Maps selalu menampilkan "Anda melihat tampilan terbatas dari Google Maps" ke Chrome otomatis (juga di browser pane). Di mode itu rentang harga
 dan opsi makan di tempat tidak muncul, bahkan untuk restoran besar. Sudah dicoba tanpa hasil: WebGL/flag GPU, `ignoreDefaultArgs enable-automation`,

@@ -40,7 +40,8 @@ function send(res, status, body, type = "application/json; charset=utf-8") {
 // Tampilan web hanya perlu ringkasan tiap tempat, bukan seluruh data per hari.
 function ringkas(r) {
   return {
-    nama: r.nama, kategori: r.kategori, rating: r.rating, jumlah_ulasan: r.jumlah_ulasan,
+    nama: r.nama, kategori: r.kategori, kecamatan: r.kecamatan, kabupaten: r.kabupaten, sesuai_wilayah: r.sesuai_wilayah,
+    rating: r.rating, jumlah_ulasan: r.jumlah_ulasan,
     lat: r.lat, lng: r.lng, harga_min: r.harga_min, harga_max: r.harga_max,
     bisa_di_tempat: r.bisa_di_tempat, buka_24_jam: r.buka_24_jam,
     jam: r.jam?.Senin?.raw || r.jam_teks.slice(0, 40), link_maps: r.link_maps,
@@ -51,7 +52,8 @@ function ringkas(r) {
 // Simpan Excel ke folder hasil/ setelah job selesai atau berhenti, supaya hasil sebagian tidak hilang.
 async function simpanFile(job) {
   if (!job.rows.length) return;
-  const file = join(ensureHasilDir(), `${slug(job.meta.jenis)}-${slug(job.meta.wilayah)}.xlsx`);
+  const nama = [job.meta.jenis, job.meta.kecamatan, job.meta.kabupaten].filter(Boolean).map(slug).join("-");
+  const file = join(ensureHasilDir(), `${nama}.xlsx`);
   writeFileSync(file, await buildXlsx(job.rows, job.meta));
   job.file = file;
 }
@@ -64,18 +66,23 @@ const server = createServer(async (req, res) => {
 
     if (req.method === "POST" && req.url === "/api/search") {
       if (activeJob) return send(res, 409, { error: "Masih ada pencarian yang berjalan." });
-      const { jenis, wilayah, maks } = await readJson(req);
-      if (!jenis?.trim() || !wilayah?.trim()) {
-        return send(res, 400, { error: "Jenis tempat dan wilayah wajib diisi." });
+      const { jenis, kecamatan = "", kabupaten = "", maks, saring = true } = await readJson(req);
+      if (!jenis?.trim() || (!kecamatan.trim() && !kabupaten.trim())) {
+        return send(res, 400, { error: "Jenis tempat wajib diisi, dan isi minimal kecamatan atau kabupaten." });
       }
       const id = String(Date.now());
-      const meta = { jenis: jenis.trim(), wilayah: wilayah.trim(), keywords: expandKeywords(jenis), tanggal: "" };
-      const job = { status: "running", progress: "Memulai...", rows: [], error: "", meta, file: "" };
+      const meta = {
+        jenis: jenis.trim(), kecamatan: kecamatan.trim(), kabupaten: kabupaten.trim(),
+        keywords: expandKeywords(jenis), saring: Boolean(saring), tanggal: "", dibuang: 0,
+      };
+      const job = { status: "running", progress: "Memulai...", rows: [], error: "", meta, file: "", dibuang: 0 };
       jobs.set(id, job);
       activeJob = id;
       searchBrowser({
         jenis: meta.jenis,
-        wilayah: meta.wilayah,
+        kecamatan: meta.kecamatan,
+        kabupaten: meta.kabupaten,
+        saring: meta.saring,
         maks: Number(maks) > 0 ? Number(maks) : undefined,
         onProgress: (text) => (job.progress = text),
         onRow: (_row, rows) => {
@@ -83,7 +90,8 @@ const server = createServer(async (req, res) => {
           job.meta.tanggal = job.meta.tanggal || rows[0].tanggal_ambil;
         },
       })
-        .then(({ rows, tanggal }) => Object.assign(job, { status: "done", rows }, { meta: { ...meta, tanggal } }))
+        .then(({ rows, tanggal, dibuang }) =>
+          Object.assign(job, { status: "done", rows, dibuang }, { meta: { ...meta, tanggal, dibuang } }))
         .catch((err) => Object.assign(job, { status: "error", error: err.message }))
         .then(() => simpanFile(job).catch((err) => console.warn("Gagal menyimpan Excel:", err.message)))
         .finally(() => (activeJob = null));
@@ -94,7 +102,7 @@ const server = createServer(async (req, res) => {
       const job = jobs.get(req.url.split("=")[1]);
       if (!job) return send(res, 404, { error: "Job tidak ditemukan" });
       return send(res, 200, {
-        status: job.status, progress: job.progress, error: job.error, file: job.file,
+        status: job.status, progress: job.progress, error: job.error, file: job.file, dibuang: job.dibuang,
         total: job.rows.length, rows: job.rows.map(ringkas),
       });
     }

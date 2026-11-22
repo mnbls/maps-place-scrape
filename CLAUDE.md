@@ -6,7 +6,8 @@ Repo: https://github.com/mnbls/maps-place-scrape (branch `main`, publik). Node.j
 
 ## Status (2026-11-22)
 
-Jalan dan teruji dengan Maps asli: input jenis + wilayah, "coffee"/"kopi" → 3 kata kunci digabung tanpa duplikat, koordinat, kategori,
+Jalan dan teruji dengan Maps asli: input jenis + **kecamatan + kabupaten/kota** (terpisah), saringan wilayah dari alamat asli (`kecamatan`, `kabupaten`,
+`sesuai_wilayah`; uji "coffee" Ceper Klaten: 9 diterima, 3 dibuang), "coffee"/"kopi" → 3 kata kunci digabung tanpa duplikat, koordinat, kategori,
 rating, jumlah ulasan, jam buka per hari (24 jam/lewat tengah malam), Excel 3 sheet, simpan otomatis ke `hasil/`.
 **Terbatas:** `harga_min/harga_max` dan `bisa_di_tempat` hampir selalu kosong/"Tidak diketahui" karena Maps memberi "tampilan terbatas" ke Chrome otomatis (lihat PROGRES.md).
 **Sudah diputuskan pengguna:** harga dan bisa_di_tempat **dibiarkan kosong** (lihat PROGRES.md "Keputusan: harga dan bisa_di_tempat"). Jangan ditanyakan ulang.
@@ -31,6 +32,8 @@ Selektor Maps yang terbukti (per 2026-11-22): daftar `div[role="feed"]` + `a.hfp
 ## Jebakan yang sudah ditemui (jangan diulang)
 
 - **Baca semua isian SEBELUM mengklik tombol jam.** Membuka jadwal mengganti isi panel; nama jadi "Jam Buka" dan rating kosong kalau dibaca sesudahnya.
+- **Kolom wilayah harus dari alamat asli**, bukan salinan teks input (pengguna menemukan tempat di luar Ceper/Klaten padahal kolomnya "ceper"). `parseWilayah`/`cocokWilayah` di `parse.mjs`: kecamatan dicocokkan bersama kabupaten ("Depok" ada di banyak kabupaten); alamat tanpa kec/kab = "Tidak diketahui" dan tidak dibuang.
+- **Hentikan server lama sebelum memulai yang baru.** Proses `node server.mjs` sisa (mis. dari folder uji yang sudah dihapus) menahan port 3737 dan membuat halaman HTTP 500. Cek `Win32_Process` CommandLine `*server.mjs*`.
 - **Jangan pakai kata "di" di query Maps** ("kafe di Jogja" dibaca sebagai rute). Query = `"<kata kunci> <wilayah>"`.
 - "Tampilan terbatas" tidak hilang dengan WebGL/flag GPU, "Lihat lainnya", klik dari daftar, atau browser pane. Jangan buang waktu mengulang itu.
 - Satu profil Chrome (`.browser-profile`) hanya untuk satu proses: matikan server sebelum skrip debug. Matikan **hanya** proses `server.mjs` (cari lewat `Win32_Process` + CommandLine), jangan `Stop-Process` semua `node`.

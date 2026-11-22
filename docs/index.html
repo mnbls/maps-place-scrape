@@ -58,7 +58,7 @@
       <li>Pasang <a href="https://nodejs.org">Node.js</a> versi LTS. Pastikan Chrome atau Edge ada di komputer.</li>
       <li>Unduh ZIP di atas, lalu ekstrak.</li>
       <li>Klik dua kali <code>start.bat</code>. Pertama kali ia memasang kebutuhan sendiri (1-2 menit), lalu browser terbuka di <code>http://localhost:3737</code>.</li>
-      <li>Isi <strong>jenis tempat</strong> dan <strong>wilayah</strong> (satu kecamatan per pencarian), lalu klik <strong>Cari</strong>.</li>
+      <li>Isi <strong>jenis tempat</strong>, <strong>kecamatan</strong>, dan <strong>kabupaten/kota</strong>, lalu klik <strong>Cari</strong>. Tempat yang alamatnya di luar wilayah itu dibuang otomatis.</li>
       <li>Chrome terbuka sendiri dan membaca Google Maps. Jangan ditutup sampai selesai (sekitar 10-30 menit per kecamatan).</li>
       <li>Unduh Excel dari halaman itu. Hasil juga tersimpan di folder <code>hasil/</code>.</li>
     </ol>
@@ -72,7 +72,7 @@
       <tr><th>Rating</th><td>Rating bintang dan jumlah ulasan, sebagai angka</td></tr>
       <tr><th>Koordinat</th><td>Lintang dan bujur (<code>lat</code>, <code>lng</code>)</td></tr>
       <tr><th>Jam operasional</th><td>Jam buka dan tutup tiap hari, penanda buka 24 jam</td></tr>
-      <tr><th>Wilayah dan sumber</th><td>Wilayah yang dicari dan kata kunci yang menemukannya</td></tr>
+      <tr><th>Wilayah</th><td>Kecamatan dan kabupaten/kota asli dari alamat tiap tempat, plus penanda sesuai wilayah yang dicari</td></tr>
     </table>
     <p style="margin-top:12px">Mengetik <code>coffee</code> atau <code>kopi</code> otomatis mencari "coffee shop", "kafe", dan "kedai kopi", lalu menggabungkan hasilnya tanpa duplikat.</p>
   </section>

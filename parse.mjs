@@ -87,6 +87,39 @@ export function parseHours(rows, fallbackText = "") {
   return { perHari, buka_24_jam: buka24, jam_teks: teks };
 }
 
+// Kecamatan dan kabupaten/kota asli tempat, dibaca dari alamat Maps ("..., Kec. Ceper, Kabupaten Klaten, Jawa Tengah 57465").
+export function parseWilayah(alamat) {
+  const bagian = String(alamat ?? "").split(",").map((s) => s.trim());
+  const kec = bagian.find((s) => /^(Kecamatan|Kec\.)\s+\S/i.test(s));
+  const kab = [...bagian].reverse().find((s) => /^(Kabupaten|Kab\.|Kota)\s+\S/i.test(s));
+  return {
+    kecamatan: kec ? kec.replace(/^(Kecamatan|Kec\.)\s+/i, "").trim() : "",
+    kabupaten: kab ? kab.replace(/^Kab\.\s*/i, "Kabupaten ").trim() : "",
+  };
+}
+
+// "Kabupaten Klaten" dan "klaten" dianggap sama; "Kota Yogyakarta" dan "Kabupaten Yogyakarta" tetap sama nama dasarnya.
+export function normalWilayah(s) {
+  return String(s ?? "")
+    .toLowerCase()
+    .replace(/\b(kecamatan|kec|kabupaten|kab|kota)\b\.?/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+// Ya / Tidak / Tidak diketahui. Hanya "Tidak" bila alamat jelas menunjuk wilayah lain; alamat tanpa kecamatan/kabupaten tidak dibuang.
+export function cocokWilayah(tempat, { kecamatan = "", kabupaten = "" }) {
+  const inKec = normalWilayah(kecamatan);
+  const inKab = normalWilayah(kabupaten);
+  const pKec = normalWilayah(tempat.kecamatan);
+  const pKab = normalWilayah(tempat.kabupaten);
+  const hasil = [];
+  if (inKec && pKec) hasil.push(pKec === inKec);
+  if (inKab && pKab) hasil.push(pKab === inKab);
+  if (!hasil.length) return "Tidak diketahui";
+  return hasil.every(Boolean) ? "Ya" : "Tidak";
+}
+
 // Ya hanya kalau Maps menyebut makan di tempat; selain itu tidak menebak.
 export function parseDineIn(text) {
   return /Makan di tempat|Dine-?in/i.test(String(text ?? "")) ? "Ya" : "Tidak diketahui";

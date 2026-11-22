@@ -5,7 +5,7 @@ import { chromium } from "playwright-core";
 import { join } from "node:path";
 import { dir } from "./lib.mjs";
 import {
-  expandKeywords, parseRating, parseCoords, parseHarga, parseHours, parseDineIn, placeKey,
+  expandKeywords, parseRating, parseCoords, parseHarga, parseHours, parseDineIn, placeKey, parseWilayah, cocokWilayah,
 } from "./parse.mjs";
 
 const PROFILE_DIR = join(dir, ".browser-profile");
@@ -123,21 +123,30 @@ async function readPlace(page, url) {
   };
 }
 
+// "Kecamatan Ceper Klaten": kata "Kecamatan" membantu Maps memusatkan hasil ke kecamatan itu.
+export function buildQuery(kata, kecamatan, kabupaten) {
+  const kec = kecamatan?.trim();
+  return [kata, kec && (/^kec/i.test(kec) ? kec : `Kecamatan ${kec}`), kabupaten?.trim()].filter(Boolean).join(" ");
+}
+
 /**
- * Mencari `jenis` di `wilayah`. "coffee"/"kopi" diperluas jadi tiga kata kunci dan hasilnya digabung.
+ * Mencari `jenis` di kecamatan/kabupaten. "coffee"/"kopi" diperluas jadi tiga kata kunci dan hasilnya digabung.
  * `maks` kosong = ambil semua yang muncul, dihitung per kata kunci.
+ * `saring` = buang tempat yang alamatnya jelas berada di luar kecamatan/kabupaten yang diminta.
  * `onRow` dipanggil tiap tempat selesai dibaca (untuk menyimpan progres).
  */
-export async function searchBrowser({ jenis, wilayah, maks, onProgress, onRow }) {
+export async function searchBrowser({ jenis, kecamatan = "", kabupaten = "", maks, saring = true, onProgress, onRow }) {
   const keywords = expandKeywords(jenis);
   const tanggal = new Date().toISOString().slice(0, 16).replace("T", " ");
+  const wilayahDicari = [kecamatan.trim(), kabupaten.trim()].filter(Boolean).join(", ");
   const context = await launch();
   const rows = [];
   const byKey = new Map();
+  let dibuang = 0;
   try {
     const page = context.pages()[0] ?? (await context.newPage());
     for (const [k, kata] of keywords.entries()) {
-      const query = `${kata} ${wilayah}`; // tanpa kata "di": Maps bisa menafsirkannya sebagai rute
+      const query = buildQuery(kata, kecamatan, kabupaten); // tanpa kata "di": Maps bisa menafsirkannya sebagai rute
       onProgress?.(`Kata kunci ${k + 1}/${keywords.length}: "${kata}"`);
       await page.goto(`https://www.google.com/maps/search/${encodeURIComponent(query)}?hl=id`, { waitUntil: "domcontentloaded" });
       await passChallenges(page, onProgress);
@@ -150,16 +159,25 @@ export async function searchBrowser({ jenis, wilayah, maks, onProgress, onRow })
           if (!ada.ditemukan_via.includes(kata)) ada.ditemukan_via.push(kata);
           continue;
         }
-        onProgress?.(`"${kata}": membaca tempat ${i + 1}/${links.length} (total ${rows.length})`);
+        onProgress?.(`"${kata}": membaca tempat ${i + 1}/${links.length} (diterima ${rows.length}, dibuang ${dibuang} di luar wilayah)`);
         for (let attempt = 0; attempt < 2; attempt++) {
           try {
             const row = await readPlace(page, link);
             await passChallenges(page, onProgress);
             if (row.nama) {
-              const item = { ...row, wilayah, ditemukan_via: [kata], tanggal_ambil: tanggal, link_maps: link };
+              const asal = parseWilayah(row.alamat);
+              const sesuai = cocokWilayah(asal, { kecamatan, kabupaten });
+              const item = {
+                ...row, ...asal, sesuai_wilayah: sesuai, wilayah_dicari: wilayahDicari,
+                ditemukan_via: [kata], tanggal_ambil: tanggal, link_maps: link,
+              };
               byKey.set(key, item);
-              rows.push(item);
-              onRow?.(item, rows);
+              if (saring && sesuai === "Tidak") {
+                dibuang++; // tetap dicatat di byKey supaya tidak dibaca ulang oleh kata kunci berikutnya
+              } else {
+                rows.push(item);
+                onRow?.(item, rows);
+              }
             }
             break;
           } catch (err) {
@@ -168,7 +186,7 @@ export async function searchBrowser({ jenis, wilayah, maks, onProgress, onRow })
         }
       }
     }
-    return { rows, keywords, tanggal };
+    return { rows, keywords, tanggal, dibuang, wilayahDicari };
   } finally {
     await context.close();
   }
