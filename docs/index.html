@@ -57,6 +57,7 @@
     <ol>
       <li>Pasang <a href="https://nodejs.org">Node.js</a> versi LTS. Pastikan Chrome atau Edge ada di komputer.</li>
       <li>Unduh ZIP di atas, lalu ekstrak.</li>
+      <li>(Disarankan, sekali saja) Klik dua kali <code>login.bat</code>, login Google di jendela Chrome yang terbuka, lalu tutup jendelanya. Ini yang membuat harga dan "makan di tempat" terbaca.</li>
       <li>Klik dua kali <code>start.bat</code>. Pertama kali ia memasang kebutuhan sendiri (1-2 menit), lalu browser terbuka di <code>http://localhost:3737</code>.</li>
       <li>Isi <strong>jenis tempat</strong>, <strong>kecamatan</strong>, dan <strong>kabupaten/kota</strong>, lalu klik <strong>Cari</strong>. Tempat yang alamatnya di luar wilayah itu dibuang otomatis.</li>
       <li>Chrome terbuka sendiri dan membaca Google Maps. Jangan ditutup sampai selesai (sekitar 10-30 menit per kecamatan).</li>
@@ -80,7 +81,7 @@
   <section class="warn">
     <h2>Batasan</h2>
     <ul>
-      <li><strong>Rentang harga dan "bisa makan di tempat" biasanya kosong.</strong> Maps menyembunyikannya dari Chrome otomatis. Kolomnya tetap ada.</li>
+      <li><strong>Rentang harga dan "bisa makan di tempat" hanya terisi bila kamu login Google</strong> (klik dua kali <code>login.bat</code> sekali, lalu login sendiri dengan akun khusus). Tanpa login Maps menyembunyikannya, dan kolomnya kosong. Google bisa membatasi akun yang dipakai untuk otomatisasi.</li>
       <li>Hasil adalah tempat yang tampil di Maps untuk pencarian itu, bukan jaminan seluruh tempat di wilayah. Satu pencarian dibatasi sekitar 60-120 hasil.</li>
       <li>Scraping langsung melanggar ketentuan layanan Google Maps. Pakai dengan risiko sendiri, dan sebutkan hal ini bila datanya dipakai di laporan.</li>
       <li>Google bisa meminta verifikasi (CAPTCHA). Selesaikan di jendela Chrome yang terbuka.</li>

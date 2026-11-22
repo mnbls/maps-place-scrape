@@ -14,6 +14,7 @@ const MENTAH = [
   { header: "Website", key: "website", width: 30 },
   { header: "Rating (teks)", key: "rating_teks", width: 14 },
   { header: "Harga (teks)", key: "harga_teks", width: 18 },
+  { header: "Opsi Layanan (label Maps)", key: "layanan_teks", width: 44 },
   { header: "Jam Operasional (teks)", key: "jam_teks", width: 70 },
   { header: "Wilayah", key: "wilayah", width: 18 },
   { header: "Kecamatan (dari alamat)", key: "kecamatan", width: 22 },
@@ -53,10 +54,10 @@ const KOLOM = [
   ["kategori", "Jenis tempat menurut Maps (mis. Kafe, Kedai Kopi). Dipakai untuk menyaring hasil yang bukan target."],
   ["kecamatan / kabupaten", "Kecamatan dan kabupaten/kota tempat itu yang sebenarnya, dibaca dari alamat di Maps (bukan salinan teks yang diketik). Kosong bila alamat tidak memuatnya."],
   ["sesuai_wilayah", "Ya bila kecamatan/kabupaten dari alamat cocok dengan yang dicari; Tidak bila alamat jelas di wilayah lain; Tidak diketahui bila alamat tidak memuat kecamatan/kabupaten. Kecamatan dicocokkan bersama kabupaten, jadi kecamatan senama di kabupaten lain tidak lolos."],
-  ["harga_min / harga_max", "Rentang harga dalam rupiah. Kosong bila Maps tidak menampilkannya (lihat catatan)."],
+  ["harga_min / harga_max", "Rentang harga dalam rupiah menurut kategori harga Maps (mis. Rp 25-50 rb = 25000 dan 50000). Kategori termurah ditulis Maps 'Rp 1-25.000', jadi harga_min 1 berarti batas bawah kategori itu. Kosong bila Maps tidak menampilkannya atau pengambilan dilakukan tanpa login (lihat catatan)."],
   ["rating / jumlah_ulasan", "Rating bintang (1-5) dan banyaknya ulasan Google."],
   ["lat / lng", "Koordinat (derajat desimal), diambil dari tautan tempat di Maps."],
-  ["bisa_di_tempat", "Ya bila Maps menyebut makan di tempat; selain itu Tidak diketahui. Tidak pernah ditebak."],
+  ["bisa_di_tempat", "Dari label ikon layanan di Maps: Ya (melayani makan di tempat), Tidak (ikon silang), atau Tidak diketahui (tidak ada informasi). Tidak pernah ditebak."],
   ["buka_24_jam", "Ya bila semua hari yang tercatat buka 24 jam; Tidak bila ada jadwal biasa; kosong bila jam tidak tercatat."],
   ["senin_buka ... minggu_tutup", "Jam buka dan tutup per hari (format jam:menit; nilai aslinya pecahan hari, jadi bisa dihitung). Bila ada jam istirahat: buka paling awal dan tutup paling akhir. Jam tutup di atas 24:00 (mis. 26:00) berarti lewat tengah malam (pukul 02.00 dini hari). Hari libur dan jam tak tercatat dikosongkan."],
   ["ditemukan_via", "Kata kunci pencarian yang menemukan tempat itu. Tempat yang sama dari beberapa kata kunci hanya ditulis sekali."],
@@ -138,6 +139,7 @@ export async function buildXlsx(rows, meta = {}) {
     ["Kata kunci yang dicari", (meta.keywords ?? []).join(", ")],
     ["Jumlah tempat (tanpa duplikat)", rows.length],
     ["Sumber", "Google Maps, dibaca otomatis dari tampilan web (scraping). Bukan data resmi Google Places API."],
+    ["Login Google saat pengambilan", meta.login === true ? "Ya (tampilan penuh: harga dan opsi makan di tempat bisa terbaca)" : meta.login === false ? "Tidak (tampilan terbatas: harga kosong dan bisa_di_tempat Tidak diketahui)" : "Tidak diketahui"],
   ];
   for (const [k, v] of info) ket.addRow([k, v]).getCell(1).font = { bold: true };
   ket.addRow([]);
@@ -145,7 +147,7 @@ export async function buildXlsx(rows, meta = {}) {
   judulCatatan.font = { bold: true };
   for (const teks of [
     "Hasil = tempat yang tampil di Google Maps untuk kata kunci dan wilayah di atas pada tanggal pengambilan. Bukan jaminan seluruh tempat di wilayah itu; satu pencarian Maps dibatasi sekitar 60-120 hasil.",
-    "Maps memberi Chrome otomatis 'tampilan terbatas'. Di tampilan itu rentang harga dan opsi makan di tempat tidak ditampilkan, jadi harga_min/harga_max kosong dan bisa_di_tempat berisi Tidak diketahui. Kolom tetap disediakan agar terisi bila datanya tersedia.",
+    "Tanpa login Google, Maps memberi 'tampilan terbatas' yang menyembunyikan rentang harga dan opsi makan di tempat; kolom harga kosong dan bisa_di_tempat berisi Tidak diketahui. Dengan login (lihat baris 'Login Google saat pengambilan') keduanya terbaca bila pemilik tempat mengisinya.",
     "Sel kosong berarti Maps tidak menampilkan datanya. Pemilik tempat tidak selalu mengisi jam buka.",
     "Rating dari sedikit ulasan kurang dapat diandalkan; perhatikan kolom jumlah_ulasan.",
     "Scraping langsung melanggar ketentuan layanan Google Maps. Sebutkan hal ini di bagian metode bila data dipakai dalam laporan.",

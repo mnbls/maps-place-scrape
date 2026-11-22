@@ -33,7 +33,7 @@ const saring = !flags.includes("--semua");
 
 try {
   const hasil = await searchBrowser({ jenis, kecamatan, kabupaten, maks, saring, onProgress: console.log });
-  const meta = { jenis, kecamatan, kabupaten, keywords: hasil.keywords, tanggal: hasil.tanggal, dibuang: hasil.dibuang, saring };
+  const meta = { jenis, kecamatan, kabupaten, keywords: hasil.keywords, tanggal: hasil.tanggal, dibuang: hasil.dibuang, saring, login: hasil.login };
   const nama = [jenis, kecamatan, kabupaten].filter(Boolean).map(slug).join("-");
   const out = join(ensureHasilDir(), `${nama}.xlsx`);
   writeFileSync(out, await buildXlsx(hasil.rows, meta));

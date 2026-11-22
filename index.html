@@ -192,7 +192,7 @@ $("searchForm").addEventListener("submit", async (e) => {
       if (job.status === "running") { msg(job.progress); continue; }
       $("fileNote").textContent = job.file ? "Tersimpan otomatis di: " + job.file : "";
       if (job.status === "error") msg("Berhenti: " + job.error + (job.total ? ". Hasil sebagian tetap bisa diunduh." : ""), true);
-      else msg(job.total ? "Selesai." : "Tidak ada hasil" + (job.dibuang ? " (" + job.dibuang + " tempat dibuang karena di luar wilayah)" : "") + ". Coba kata kunci atau wilayah lain.");
+      else msg(job.total ? "Selesai." + (job.login === false ? " Catatan: belum login Google, jadi harga dan makan di tempat kemungkinan kosong (lihat bagian login di README)." : "") : "Tidak ada hasil" + (job.dibuang ? " (" + job.dibuang + " tempat dibuang karena di luar wilayah)" : "") + ". Coba kata kunci atau wilayah lain.");
       break;
     }
   } catch (err) { msg(err.message, true); }

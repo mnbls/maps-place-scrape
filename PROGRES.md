@@ -33,18 +33,22 @@ keputusan fuzzy. Metode fuzzy-nya belum ditentukan dan dihitung pengguna sendiri
   query "kata Kecamatan X Kabupaten", kolom `kecamatan`/`kabupaten` dibaca dari alamat, `sesuai_wilayah`, dan saringan (bisa dimatikan; `--semua` di CLI).
   Uji: "coffee" Ceper Klaten maks 6/kata kunci → 9 diterima (8 Ya, 1 Tidak diketahui), 3 dibuang. Parser: 13 uji lulus.
 
-## Temuan penting: "tampilan terbatas"
-Maps selalu menampilkan "Anda melihat tampilan terbatas dari Google Maps" ke Chrome otomatis (juga di browser pane). Di mode itu rentang harga
-dan opsi makan di tempat tidak muncul, bahkan untuk restoran besar. Sudah dicoba tanpa hasil: WebGL/flag GPU, `ignoreDefaultArgs enable-automation`,
-tautan "Lihat lainnya", klik dari daftar (bukan muat ulang). Yang tersisa di tab "Tentang" hanya "Diambil sendiri atau diantar" (bukan makan di tempat).
-Akibatnya `harga_min/harga_max` kosong dan `bisa_di_tempat` = "Tidak diketahui" di hampir semua baris.
+- **2026-11-22 (login)** Pengguna menunjukkan tangkapan layar Maps di Chrome-nya (login) dengan harga "Rp 25–50 rb" dan layanan lengkap, dan menuntut kolom itu harus terisi.
+  Dicoba berurutan: Chrome biasa tanpa login (webdriver false) → tetap "tampilan terbatas"; emulasi HP → **diblokir sistem keamanan** (pengelabuan), dihentikan.
+  **Login Google di profil scraper → tampilan penuh muncul.** Pengguna login sendiri lewat Chrome biasa di profil yang sama. Ditambah: `login.bat`/`login.mjs`, deteksi login
+  (`meta.login`, catatan di Keterangan, peringatan di tampilan web), pembacaan makan di tempat dari label ikon, kolom "Opsi Layanan (label Maps)" di Data Mentah.
+  Bug parser: satuan `k` menangkap huruf K dari "Kedai" (Nuju Coffee jadi 1.000–25.000.000); diperbaiki dengan `\b`, 9 uji harga lulus.
+  Uji "coffee" Depok Sleman maks 5/kata kunci: 10 tempat, harga 10/10, makan di tempat 10/10 (semua Ya), jam 10/10.
 
-## Keputusan: harga dan bisa_di_tempat (2026-11-22)
-**Dibiarkan kosong** (pilihan pengguna). Kolom tetap ada dan dijelaskan di sheet Keterangan; `bisa_di_tempat` = "Tidak diketahui".
-Opsi lain yang ditolak untuk saat ini, bila suatu hari dibutuhkan:
-- Hibrida Google Places API hanya untuk dua kolom itu (`priceRange`, `dineIn`): butuh API key dan billing; resmi dan terstruktur.
-- Login Google di profil Chrome otomatis: belum terbukti, berisiko akun ditandai; pengguna harus login sendiri.
-Jangan menanyakan ulang kecuali pengguna membukanya.
+## Temuan penting: "tampilan terbatas"
+Tanpa login, Maps menampilkan "Anda melihat tampilan terbatas dari Google Maps" ke Chrome otomatis (juga di browser pane dan Chrome biasa tanpa login). Di mode itu rentang harga
+dan opsi makan di tempat tidak muncul, bahkan untuk restoran besar. Tidak membantu: WebGL/flag GPU, `ignoreDefaultArgs enable-automation`, "Lihat lainnya", klik dari daftar, Chrome tanpa flag otomatisasi.
+**Yang membantu: login Google di profil.** Dengan login, header memuat "4,3 (96)·Rp 25–50 rb" dan ikon layanan punya aria-label.
+
+## Keputusan terbuka
+- Label ikon untuk "Tidak melayani makan di tempat" belum pernah ditemui (semua kedai kopi uji = Ya). Cari tempat take-away saja (mis. kios kopi) untuk memverifikasi `parseDineIn`.
+- Google Places API sebagai cadangan bila login diblokir Google: belum dibangun (butuh API key dan billing).
+- Risiko akun: Google bisa membatasi akun yang dipakai otomatisasi; pengguna disarankan memakai akun khusus.
 
 ## Berikutnya
 - Uji satu kecamatan penuh tanpa "Maks." (perkiraan 10-30 menit) dan cek jumlah hasil vs batas ~120 Maps.

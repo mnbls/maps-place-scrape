@@ -78,9 +78,13 @@ async function readPlace(page, url) {
         hari: tr.querySelector("td.ylH6lf")?.innerText.trim(),
         items: [...tr.querySelectorAll("li.G8aQO")].map((li) => li.innerText.trim()),
       })),
-      // Bagian atas panel (sebelum ulasan) tempat harga dan opsi layanan muncul bila tersedia.
+      // Bagian atas panel (sebelum ulasan) tempat harga muncul bila tersedia (hanya di tampilan penuh, setelah login).
       atas: panel.split(/Ringkasan ulasan/)[0],
       header: panel.split(/\bRute\b/)[0],
+      // Ikon layanan punya label: "Melayani makan di tempat", "Bisa bawa pulang", "Tidak menyediakan layanan pengiriman".
+      layanan: [...document.querySelectorAll('div[role="group"][aria-label]')]
+        .map((e) => e.getAttribute("aria-label"))
+        .filter((l) => /makan di tempat|bawa pulang|pengiriman|pesan antar|dine-?in|take ?away|delivery/i.test(l)),
     };
   });
 
@@ -115,8 +119,9 @@ async function readPlace(page, url) {
     lat,
     lng,
     ...harga,
-    harga_teks: harga.harga_min === "" ? "" : mentah.header.match(/Rp[^A-Za-z]{0,24}/)?.[0]?.trim() ?? "",
-    bisa_di_tempat: parseDineIn(mentah.atas),
+    harga_teks: mentah.header.match(/Rp\s?[\d.,]+(?:\s*(?:rb|ribu|jt|juta|k)\b)?(?:\s*[–—-]\s*(?:Rp\s?)?[\d.,]+(?:\s*(?:rb|ribu|jt|juta|k)\b)?)?/i)?.[0] ?? "",
+    bisa_di_tempat: parseDineIn(mentah.layanan),
+    layanan_teks: mentah.layanan.join("; "),
     buka_24_jam: jam.buka_24_jam,
     jam_teks: jam.jam_teks,
     jam: jam.perHari,
@@ -145,6 +150,9 @@ export async function searchBrowser({ jenis, kecamatan = "", kabupaten = "", mak
   let dibuang = 0;
   try {
     const page = context.pages()[0] ?? (await context.newPage());
+    // Tanpa login Google, Maps hanya memberi "tampilan terbatas": harga dan opsi makan di tempat tidak muncul.
+    const login = (await context.cookies("https://www.google.com")).some((c) => /^(SID|__Secure-1PSID|SAPISID)$/.test(c.name));
+    if (!login) onProgress?.("Belum login Google: harga dan makan di tempat kemungkinan kosong (lihat README, bagian login).");
     for (const [k, kata] of keywords.entries()) {
       const query = buildQuery(kata, kecamatan, kabupaten); // tanpa kata "di": Maps bisa menafsirkannya sebagai rute
       onProgress?.(`Kata kunci ${k + 1}/${keywords.length}: "${kata}"`);
@@ -186,7 +194,7 @@ export async function searchBrowser({ jenis, kecamatan = "", kabupaten = "", mak
         }
       }
     }
-    return { rows, keywords, tanggal, dibuang, wilayahDicari };
+    return { rows, keywords, tanggal, dibuang, wilayahDicari, login };
   } finally {
     await context.close();
   }

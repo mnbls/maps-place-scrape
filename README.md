@@ -21,6 +21,18 @@ Halaman itu hanya panduan; aplikasinya tetap dijalankan di komputer sendiri kare
 
 Satu kecamatan dengan "coffee" memakan sekitar 10-30 menit. Kalau Google meminta verifikasi (CAPTCHA), selesaikan di jendela Chrome.
 
+## Login Google (supaya harga dan "makan di tempat" terisi)
+
+Tanpa login, Maps memberi Chrome otomatis "tampilan terbatas" yang **menyembunyikan rentang harga dan opsi makan di tempat**.
+Dengan login, keduanya terbaca (diuji: 9 dari 9 kedai kopi di Depok, Sleman terisi harga dan layanan). Cukup sekali:
+
+1. Klik dua kali **`login.bat`** (atau `node login.mjs`). Chrome biasa terbuka di halaman login Google.
+2. **Login sendiri** (sangat disarankan akun khusus, bukan akun utama), lalu **tutup jendela Chrome itu**.
+3. Jalankan `start.bat` seperti biasa. Login tersimpan di folder `.browser-profile` (tidak ikut ke GitHub; jangan dibagikan).
+
+Catatan: Google bisa membatasi akun yang dipakai untuk otomatisasi; risikonya ada di pemilik akun. Sheet Keterangan mencatat apakah pengambilan dilakukan
+dalam keadaan login, dan tampilan web memberi peringatan bila belum login. Kolom tetap kosong bila pemilik tempat tidak mengisinya di Maps.
+
 ## Lewat terminal
 
 ```bash
@@ -43,8 +55,11 @@ Tanpa `--maks`, semua yang muncul di Maps diambil, dihitung per kata kunci.
 
 ## Batasan (jujur)
 
-- **Harga dan `bisa_di_tempat` biasanya kosong.** Maps memberi Chrome otomatis "tampilan terbatas" yang menyembunyikan rentang harga
-  dan opsi makan di tempat. Kolomnya tetap ada; `bisa_di_tempat` berisi `Tidak diketahui` (tidak pernah ditebak).
+- **Harga dan `bisa_di_tempat` hanya terisi bila profil Chrome sudah login Google** (lihat bagian login). Tanpa login kolom harga kosong dan
+  `bisa_di_tempat` = `Tidak diketahui` (tidak pernah ditebak). `bisa_di_tempat` dibaca dari label ikon di Maps ("Melayani makan di tempat" = Ya);
+  label untuk "Tidak" belum pernah ditemui di uji, jadi belum terverifikasi.
+- `harga_min`/`harga_max` mengikuti kategori harga Maps (mis. "Rp 25–50 rb" = 25.000–50.000). Kategori termurah ditulis Maps "Rp 1–25.000",
+  jadi `harga_min` = 1 berarti batas bawah kategori itu, bukan harga Rp 1.
 - Hasil adalah tempat yang tampil di Maps untuk pencarian itu, bukan jaminan seluruh tempat di wilayah. Satu pencarian Maps dibatasi
   sekitar 60-120 hasil; untuk wilayah padat, cari per kecamatan atau desa.
 - `kecamatan` dan `kabupaten` dibaca dari **alamat asli** tiap tempat, bukan dari teks yang diketik. `sesuai_wilayah` = Ya / Tidak / Tidak diketahui

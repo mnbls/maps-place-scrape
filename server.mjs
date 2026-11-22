@@ -90,8 +90,8 @@ const server = createServer(async (req, res) => {
           job.meta.tanggal = job.meta.tanggal || rows[0].tanggal_ambil;
         },
       })
-        .then(({ rows, tanggal, dibuang }) =>
-          Object.assign(job, { status: "done", rows, dibuang }, { meta: { ...meta, tanggal, dibuang } }))
+        .then(({ rows, tanggal, dibuang, login }) =>
+          Object.assign(job, { status: "done", rows, dibuang, login }, { meta: { ...meta, tanggal, dibuang, login } }))
         .catch((err) => Object.assign(job, { status: "error", error: err.message }))
         .then(() => simpanFile(job).catch((err) => console.warn("Gagal menyimpan Excel:", err.message)))
         .finally(() => (activeJob = null));
@@ -102,7 +102,7 @@ const server = createServer(async (req, res) => {
       const job = jobs.get(req.url.split("=")[1]);
       if (!job) return send(res, 404, { error: "Job tidak ditemukan" });
       return send(res, 200, {
-        status: job.status, progress: job.progress, error: job.error, file: job.file, dibuang: job.dibuang,
+        status: job.status, progress: job.progress, error: job.error, file: job.file, dibuang: job.dibuang, login: job.login,
         total: job.rows.length, rows: job.rows.map(ringkas),
       });
     }

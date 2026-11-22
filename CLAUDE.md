@@ -9,21 +9,24 @@ Repo: https://github.com/mnbls/maps-place-scrape (branch `main`, publik). Node.j
 Jalan dan teruji dengan Maps asli: input jenis + **kecamatan + kabupaten/kota** (terpisah), saringan wilayah dari alamat asli (`kecamatan`, `kabupaten`,
 `sesuai_wilayah`; uji "coffee" Ceper Klaten: 9 diterima, 3 dibuang), "coffee"/"kopi" → 3 kata kunci digabung tanpa duplikat, koordinat, kategori,
 rating, jumlah ulasan, jam buka per hari (24 jam/lewat tengah malam), Excel 3 sheet, simpan otomatis ke `hasil/`.
-**Terbatas:** `harga_min/harga_max` dan `bisa_di_tempat` hampir selalu kosong/"Tidak diketahui" karena Maps memberi "tampilan terbatas" ke Chrome otomatis (lihat PROGRES.md).
-**Sudah diputuskan pengguna:** harga dan bisa_di_tempat **dibiarkan kosong** (lihat PROGRES.md "Keputusan: harga dan bisa_di_tempat"). Jangan ditanyakan ulang.
+**Harga dan bisa_di_tempat TERISI bila profil Chrome login Google** (pengguna menuntut kolom ini harus terisi). Diuji "coffee" Depok Sleman: 10 tempat, harga 10/10, makan di tempat 10/10.
+Tanpa login Maps memberi "tampilan terbatas" dan kedua kolom kosong/"Tidak diketahui"; `meta.login` dicatat di sheet Keterangan dan tampilan web memberi peringatan.
+Login dilakukan **pengguna sendiri** lewat `login.bat`/`login.mjs` (Chrome biasa di profil `.browser-profile`; Chrome harus ditutup penuh sesudahnya). Jangan masukkan kredensial atas nama pengguna.
+**Belum terverifikasi:** label ikon untuk "Tidak melayani makan di tempat" (semua kedai kopi uji = Ya); `parseDineIn` mengasumsikan label berkata "Tidak/Bukan".
 
 ## Struktur
 
 | File | Isi |
 |---|---|
 | `parse.mjs` | Fungsi murni (tanpa browser): `expandKeywords`, `parseRating`, `parseCoords`, `parseHarga`, `parseDay/parseHours`, `parseDineIn`, `placeKey`. Mudah diuji |
-| `browser.mjs` | Playwright + Chrome/Edge asli (jendela terlihat). `searchBrowser({jenis, wilayah, maks, onProgress, onRow})`, `collectLinks`, `readPlace` |
+| `browser.mjs` | Playwright + Chrome/Edge asli (jendela terlihat). `searchBrowser({jenis, kecamatan, kabupaten, maks, saring, onProgress, onRow})` (mengembalikan `login`), `buildQuery`, `collectLinks`, `readPlace` |
 | `xlsx.mjs` | `buildXlsx(rows, meta)` dengan `exceljs`, 3 sheet |
 | `server.mjs` | `127.0.0.1:3737`. `POST /api/search` (job), `GET /api/job?id=`, `GET /api/xlsx?id=`. Menyimpan Excel ke `hasil/` saat job selesai/berhenti |
 | `index.html` | Seluruh tampilan (satu file) |
 | `scrape.mjs` | Versi terminal |
 | `lib.mjs` | `dir`, `HASIL_DIR`, `slug` |
 | `start.bat` | Cek Node, `npm install` otomatis, buka browser, jalankan server |
+| `login.bat` / `login.mjs` | Membuka Chrome biasa di profil scraper untuk login Google oleh pengguna |
 
 Selektor Maps yang terbukti (per 2026-11-22): daftar `div[role="feed"]` + `a.hfpxzc`; detail `h1`, `button.DkEaL` (kategori), `div.F7nice` ("4,8 (713)"),
 `button[data-item-id="address"]`, `button[data-item-id^="phone"]`, `a[data-item-id="authority"]`; jam: tombol `button[aria-label*="jam lainnya"]` lalu
@@ -35,7 +38,11 @@ Selektor Maps yang terbukti (per 2026-11-22): daftar `div[role="feed"]` + `a.hfp
 - **Kolom wilayah harus dari alamat asli**, bukan salinan teks input (pengguna menemukan tempat di luar Ceper/Klaten padahal kolomnya "ceper"). `parseWilayah`/`cocokWilayah` di `parse.mjs`: kecamatan dicocokkan bersama kabupaten ("Depok" ada di banyak kabupaten); alamat tanpa kec/kab = "Tidak diketahui" dan tidak dibuang.
 - **Hentikan server lama sebelum memulai yang baru.** Proses `node server.mjs` sisa (mis. dari folder uji yang sudah dihapus) menahan port 3737 dan membuat halaman HTTP 500. Cek `Win32_Process` CommandLine `*server.mjs*`.
 - **Jangan pakai kata "di" di query Maps** ("kafe di Jogja" dibaca sebagai rute). Query = `"<kata kunci> <wilayah>"`.
-- "Tampilan terbatas" tidak hilang dengan WebGL/flag GPU, "Lihat lainnya", klik dari daftar, atau browser pane. Jangan buang waktu mengulang itu.
+- "Tampilan terbatas" HILANG hanya dengan **login Google** di profil. Tidak hilang dengan WebGL/flag GPU, "Lihat lainnya", klik dari daftar, browser pane, atau Chrome biasa tanpa login (webdriver false). Jangan ulangi itu.
+- **Jangan menyamar sebagai perangkat lain** (emulasi HP/user agent) untuk mengakali tampilan terbatas: diblokir sistem keamanan sebagai pengelabuan. Jalur sah: login pengguna, atau Google Places API (belum dibangun; butuh API key + billing).
+- **Bug parser `parseHarga`:** satuan `k` menangkap huruf K dari kata berikutnya ("Rp 1–25.000 Kedai Kopi" jadi 1.000–25.000.000). Satuan harus diakhiri `\b`. Maps menulis kategori termurah "Rp 1–25.000" (harga_min 1 = batas bawah kategori).
+- Makan di tempat dibaca dari `div[role="group"][aria-label]` ("Melayani makan di tempat", "Bisa bawa pulang", "Tidak menyediakan layanan pengiriman"), bukan dari tulisan, karena ikon ✓/✗ yang menentukan.
+- Chrome yang dibuka `login.mjs` meninggalkan proses di latar; scraper menolak jalan sampai Chrome profil itu benar-benar ditutup (cek `Win32_Process` CommandLine `*.browser-profile*`).
 - Satu profil Chrome (`.browser-profile`) hanya untuk satu proses: matikan server sebelum skrip debug. Matikan **hanya** proses `server.mjs` (cari lewat `Win32_Process` + CommandLine), jangan `Stop-Process` semua `node`.
 - Tool `Write` menolak menimpa file yang belum di-`Read` di sesi itu.
 - CAPTCHA (`/sorry/`): skrip menunggu pengguna menyelesaikannya (maks 2 menit). Jangan coba melewatinya. Scraping melanggar ketentuan Google; jangan beri janji kelengkapan data.

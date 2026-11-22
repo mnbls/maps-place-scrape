@@ -39,11 +39,12 @@ function rupiah(angka, unit) {
 // "Rp 20-40 rb" -> { harga_min: 20000, harga_max: 40000 }. Kosong kalau tidak ada harga.
 export function parseHarga(text) {
   const t = String(text ?? "");
-  const r = t.match(/Rp\s?([\d.,]+)\s*(rb|ribu|jt|juta|k)?\s*[–—-]\s*(?:Rp\s?)?([\d.,]+)\s*(rb|ribu|jt|juta|k)?/i);
+  // \b setelah satuan: tanpa itu "k" menangkap huruf K dari kata berikutnya ("Rp 1-25.000 Kedai Kopi" jadi dikali 1.000).
+  const r = t.match(/Rp\s?([\d.,]+)\s*(rb|ribu|jt|juta|k)?\b\s*[–—-]\s*(?:Rp\s?)?([\d.,]+)\s*(?:(rb|ribu|jt|juta|k)\b)?/i);
   if (r) {
     return { harga_min: rupiah(r[1], r[2] ?? r[4]), harga_max: rupiah(r[3], r[4] ?? r[2]) };
   }
-  const s = t.match(/Rp\s?([\d.,]+)\s*(rb|ribu|jt|juta|k)?/i);
+  const s = t.match(/Rp\s?([\d.,]+)\s*(?:(rb|ribu|jt|juta|k)\b)?/i);
   if (s) {
     const v = rupiah(s[1], s[2]);
     return { harga_min: v, harga_max: v };
@@ -120,7 +121,11 @@ export function cocokWilayah(tempat, { kecamatan = "", kabupaten = "" }) {
   return hasil.every(Boolean) ? "Ya" : "Tidak";
 }
 
-// Ya hanya kalau Maps menyebut makan di tempat; selain itu tidak menebak.
-export function parseDineIn(text) {
-  return /Makan di tempat|Dine-?in/i.test(String(text ?? "")) ? "Ya" : "Tidak diketahui";
+// Dari label ikon layanan di Maps (hanya ada di tampilan penuh, yaitu setelah login):
+// "Melayani makan di tempat" -> Ya, "Tidak melayani makan di tempat" -> Tidak. Tanpa label tidak menebak.
+// Tulisan "Makan di tempat" saja tidak cukup, karena ikon centang atau silang yang menentukan.
+export function parseDineIn(labels) {
+  const label = (Array.isArray(labels) ? labels : []).find((l) => /makan di tempat|dine-?in/i.test(l ?? ""));
+  if (!label) return "Tidak diketahui";
+  return /\b(tidak|bukan|tanpa)\b/i.test(label) ? "Tidak" : "Ya";
 }
