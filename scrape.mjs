@@ -5,7 +5,7 @@
 import { writeFileSync } from "node:fs";
 import { createInterface } from "node:readline/promises";
 import { join } from "node:path";
-import { ensureHasilDir, slug } from "./lib.mjs";
+import { ensureHasilDir, namaFile } from "./lib.mjs";
 import { searchBrowser } from "./browser.mjs";
 import { buildXlsx } from "./xlsx.mjs";
 
@@ -33,11 +33,10 @@ const saring = !flags.includes("--semua");
 
 try {
   const hasil = await searchBrowser({ jenis, kecamatan, kabupaten, maks, saring, onProgress: console.log });
-  const meta = { jenis, kecamatan, kabupaten, keywords: hasil.keywords, tanggal: hasil.tanggal, dibuang: hasil.dibuang, saring, login: hasil.login };
-  const nama = [jenis, kecamatan, kabupaten].filter(Boolean).map(slug).join("-");
-  const out = join(ensureHasilDir(), `${nama}.xlsx`);
-  writeFileSync(out, await buildXlsx(hasil.rows, meta));
+  const out = join(ensureHasilDir(), namaFile({ jenis, kecamatan, kabupaten }));
+  writeFileSync(out, await buildXlsx(hasil.rows));
   console.log(`Selesai: ${hasil.rows.length} tempat diterima, ${hasil.dibuang} dibuang di luar wilayah -> ${out}`);
+  if (hasil.login === false) console.log("Catatan: belum login Google, harga dan bisa_di_tempat kemungkinan kosong (jalankan login.bat).");
 } catch (err) {
   console.error("Gagal:", err.message);
   process.exit(1);

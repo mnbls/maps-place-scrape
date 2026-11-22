@@ -9,7 +9,7 @@ keputusan fuzzy. Metode fuzzy-nya belum ditentukan dan dihitung pengguna sendiri
 ## Keputusan yang sudah diambil
 | Hal | Keputusan | Alasan |
 |---|---|---|
-| Output | Hanya Excel: Data Mentah, Data Bersih, Keterangan | Mentah untuk bukti di laporan, Bersih berupa angka siap hitung, Keterangan untuk metode |
+| Output | Hanya Excel, **satu sheet "Data" berisi data bersih** (awalnya 3 sheet: Mentah, Bersih, Keterangan; dipangkas atas permintaan pengguna), nama file dari input | Pengguna hanya butuh data siap olah. Konsekuensi: tanggal ambil, kata kunci, dan status login tidak tercatat di file |
 | Input | Jenis tempat + wilayah, diketik sendiri | Fleksibel; kecamatan diketik satu per satu |
 | "coffee"/"kopi" | Diperluas jadi "coffee shop", "kafe", "kedai kopi", digabung dan dibuang duplikatnya | Maps memberi hasil berbeda tiap kata; kolom `ditemukan_via` mencatat asalnya |
 | Jumlah maks | Opsional, per kata kunci; kosong = semua yang muncul | Tujuannya mengambil seluruh yang tampil di wilayah |
@@ -53,3 +53,7 @@ dan opsi makan di tempat tidak muncul, bahkan untuk restoran besar. Tidak memban
 ## Berikutnya
 - Uji satu kecamatan penuh tanpa "Maks." (perkiraan 10-30 menit) dan cek jumlah hasil vs batas ~120 Maps.
 - Bila wilayah padat terpotong: cari per desa.
+
+- **2026-11-22 (Excel ringkas)** Pengguna meminta file Excel diberi nama dari input dan isinya langsung data bersih. Sekarang satu sheet "Data"; nama file jenis-kecamatan-kabupaten.xlsx lewat 
+amaFile(),
+  dan unduhan memakai header Content-Disposition (sebelumnya nama file unduhan tidak ikut input). Uji: "coffee" Depok Sleman → 1 sheet, 30 kolom, nama file benar.

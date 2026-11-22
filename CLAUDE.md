@@ -1,6 +1,6 @@
 # maps-place-scrape
 
-Mengambil daftar tempat dari Google Maps per wilayah (kecamatan/kabupaten) → Excel 3 sheet (Data Mentah, Data Bersih, Keterangan)
+Mengambil daftar tempat dari Google Maps per wilayah (kecamatan/kabupaten) → Excel **satu sheet "Data" berisi data bersih saja** (permintaan pengguna; Data Mentah dan Keterangan sudah dibuang), nama file dari input via `namaFile()` di `lib.mjs`
 sebagai bahan sistem keputusan fuzzy yang dihitung pengguna sendiri di luar aplikasi. **Tidak ada perhitungan/skor di aplikasi.**
 Repo: https://github.com/mnbls/maps-place-scrape (branch `main`, publik). Node.js saja, tanpa Python. Detail riwayat: `PROGRES.md`.
 
@@ -8,9 +8,9 @@ Repo: https://github.com/mnbls/maps-place-scrape (branch `main`, publik). Node.j
 
 Jalan dan teruji dengan Maps asli: input jenis + **kecamatan + kabupaten/kota** (terpisah), saringan wilayah dari alamat asli (`kecamatan`, `kabupaten`,
 `sesuai_wilayah`; uji "coffee" Ceper Klaten: 9 diterima, 3 dibuang), "coffee"/"kopi" → 3 kata kunci digabung tanpa duplikat, koordinat, kategori,
-rating, jumlah ulasan, jam buka per hari (24 jam/lewat tengah malam), Excel 3 sheet, simpan otomatis ke `hasil/`.
+rating, jumlah ulasan, jam buka per hari (24 jam/lewat tengah malam), Excel satu sheet, simpan otomatis ke `hasil/` dan unduhan memakai nama file yang sama (header `Content-Disposition`).
 **Harga dan bisa_di_tempat TERISI bila profil Chrome login Google** (pengguna menuntut kolom ini harus terisi). Diuji "coffee" Depok Sleman: 10 tempat, harga 10/10, makan di tempat 10/10.
-Tanpa login Maps memberi "tampilan terbatas" dan kedua kolom kosong/"Tidak diketahui"; `meta.login` dicatat di sheet Keterangan dan tampilan web memberi peringatan.
+Tanpa login Maps memberi "tampilan terbatas" dan kedua kolom kosong/"Tidak diketahui"; tampilan web dan terminal memberi peringatan (`login` dari `searchBrowser`); status login tidak lagi ditulis di Excel.
 Login dilakukan **pengguna sendiri** lewat `login.bat`/`login.mjs` (Chrome biasa di profil `.browser-profile`; Chrome harus ditutup penuh sesudahnya). Jangan masukkan kredensial atas nama pengguna.
 **Belum terverifikasi:** label ikon untuk "Tidak melayani makan di tempat" (semua kedai kopi uji = Ya); `parseDineIn` mengasumsikan label berkata "Tidak/Bukan".
 
@@ -20,7 +20,7 @@ Login dilakukan **pengguna sendiri** lewat `login.bat`/`login.mjs` (Chrome biasa
 |---|---|
 | `parse.mjs` | Fungsi murni (tanpa browser): `expandKeywords`, `parseRating`, `parseCoords`, `parseHarga`, `parseDay/parseHours`, `parseDineIn`, `placeKey`. Mudah diuji |
 | `browser.mjs` | Playwright + Chrome/Edge asli (jendela terlihat). `searchBrowser({jenis, kecamatan, kabupaten, maks, saring, onProgress, onRow})` (mengembalikan `login`), `buildQuery`, `collectLinks`, `readPlace` |
-| `xlsx.mjs` | `buildXlsx(rows, meta)` dengan `exceljs`, 3 sheet |
+| `xlsx.mjs` | `buildXlsx(rows)` dengan `exceljs`, satu sheet "Data" |
 | `server.mjs` | `127.0.0.1:3737`. `POST /api/search` (job), `GET /api/job?id=`, `GET /api/xlsx?id=`. Menyimpan Excel ke `hasil/` saat job selesai/berhenti |
 | `index.html` | Seluruh tampilan (satu file) |
 | `scrape.mjs` | Versi terminal |

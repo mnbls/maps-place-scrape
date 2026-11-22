@@ -1,7 +1,7 @@
 ﻿# maps-place-scrape
 
 Mengambil daftar tempat dari Google Maps untuk satu wilayah (kecamatan/kabupaten) dan menyimpannya sebagai
-file Excel 3 sheet, siap dipakai sebagai bahan analisis (mis. sistem pendukung keputusan).
+file Excel berisi data bersih, siap dipakai sebagai bahan analisis (mis. sistem pendukung keputusan).
 Isi jenis tempat dan wilayah, lalu unduh Excel-nya. Tidak ada perhitungan di dalam aplikasi.
 
 Mengetik `coffee` atau `kopi` otomatis mencari "coffee shop", "kafe", dan "kedai kopi", menggabungkan hasilnya,
@@ -30,8 +30,8 @@ Dengan login, keduanya terbaca (diuji: 9 dari 9 kedai kopi di Depok, Sleman teri
 2. **Login sendiri** (sangat disarankan akun khusus, bukan akun utama), lalu **tutup jendela Chrome itu**.
 3. Jalankan `start.bat` seperti biasa. Login tersimpan di folder `.browser-profile` (tidak ikut ke GitHub; jangan dibagikan).
 
-Catatan: Google bisa membatasi akun yang dipakai untuk otomatisasi; risikonya ada di pemilik akun. Sheet Keterangan mencatat apakah pengambilan dilakukan
-dalam keadaan login, dan tampilan web memberi peringatan bila belum login. Kolom tetap kosong bila pemilik tempat tidak mengisinya di Maps.
+Catatan: Google bisa membatasi akun yang dipakai untuk otomatisasi; risikonya ada di pemilik akun. Tampilan web dan terminal memberi peringatan
+bila pengambilan dilakukan tanpa login. Kolom tetap kosong bila pemilik tempat tidak mengisinya di Maps.
 
 ## Lewat terminal
 
@@ -47,11 +47,16 @@ Tanpa `--maks`, semua yang muncul di Maps diambil, dihitung per kata kunci.
 
 ## Isi Excel
 
-- **Data Mentah**: teks asli dari Maps (alamat, telepon, website, rating dan jam dalam bentuk teks), untuk bukti.
-- **Data Bersih**: `nama_maps, kategori, kecamatan, kabupaten, sesuai_wilayah, harga_min, harga_max, rating, jumlah_ulasan, lat, lng, bisa_di_tempat, buka_24_jam`,
-  jam buka dan tutup tiap hari (`senin_buka` ... `minggu_tutup`), `alamat`, `ditemukan_via`, `link_maps`.
-  Jam disimpan sebagai angka berformat `jam:menit`; jam tutup di atas 24:00 (mis. 26:00) berarti lewat tengah malam.
-- **Keterangan**: tanggal pengambilan, kata kunci, sumber, arti kolom, dan batasan.
+Satu file, satu sheet (`Data`) berisi data bersih. Nama file diambil dari input: `jenis-kecamatan-kabupaten.xlsx`
+(mis. `coffee-depok-sleman.xlsx`), baik yang tersimpan otomatis di `hasil/` maupun yang diunduh lewat tombol.
+
+Kolom: `nama_maps, kategori, kecamatan, kabupaten, sesuai_wilayah, harga_min, harga_max, rating, jumlah_ulasan, lat, lng, bisa_di_tempat, buka_24_jam`,
+jam buka dan tutup tiap hari (`senin_buka` ... `minggu_tutup`), `alamat`, `ditemukan_via`, `link_maps`.
+
+- Jam disimpan sebagai angka berformat `jam:menit`; jam tutup di atas 24:00 (mis. 26:00) berarti lewat tengah malam.
+- `harga_min`/`harga_max` dalam rupiah mengikuti kategori harga Maps ("Rp 25–50 rb" = 25.000 dan 50.000); kategori termurah ditulis Maps "Rp 1–25.000", jadi `harga_min` 1 = batas bawah kategori itu.
+- `bisa_di_tempat` = Ya / Tidak / Tidak diketahui; `sesuai_wilayah` = Ya / Tidak / Tidak diketahui.
+- Tanggal pengambilan, kata kunci, dan status login tidak ikut di file; catat sendiri bila perlu untuk laporan.
 
 ## Batasan (jujur)
 

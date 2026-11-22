@@ -13,3 +13,9 @@ export function ensureHasilDir() {
 export function slug(text) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
+
+// Nama file Excel dari input: "coffee-depok-sleman.xlsx". Dipakai untuk simpan otomatis dan unduhan.
+export function namaFile({ jenis, kecamatan, kabupaten }) {
+  const nama = [jenis, kecamatan, kabupaten].filter(Boolean).map(slug).filter(Boolean).join("-");
+  return `${nama || "hasil"}.xlsx`;
+}

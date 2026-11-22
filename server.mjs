@@ -3,7 +3,7 @@
 import { createServer } from "node:http";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { dir, ensureHasilDir, slug } from "./lib.mjs";
+import { dir, ensureHasilDir, namaFile } from "./lib.mjs";
 import { searchBrowser } from "./browser.mjs";
 import { expandKeywords } from "./parse.mjs";
 import { buildXlsx } from "./xlsx.mjs";
@@ -52,9 +52,8 @@ function ringkas(r) {
 // Simpan Excel ke folder hasil/ setelah job selesai atau berhenti, supaya hasil sebagian tidak hilang.
 async function simpanFile(job) {
   if (!job.rows.length) return;
-  const nama = [job.meta.jenis, job.meta.kecamatan, job.meta.kabupaten].filter(Boolean).map(slug).join("-");
-  const file = join(ensureHasilDir(), `${nama}.xlsx`);
-  writeFileSync(file, await buildXlsx(job.rows, job.meta));
+  const file = join(ensureHasilDir(), namaFile(job.meta));
+  writeFileSync(file, await buildXlsx(job.rows));
   job.file = file;
 }
 
@@ -110,9 +109,10 @@ const server = createServer(async (req, res) => {
     if (req.method === "GET" && req.url.startsWith("/api/xlsx?id=")) {
       const job = jobs.get(req.url.split("=")[1]);
       if (!job || !job.rows.length) return send(res, 404, { error: "Belum ada data untuk diunduh." });
-      const buffer = await buildXlsx(job.rows, job.meta);
+      const buffer = await buildXlsx(job.rows);
       res.writeHead(200, {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": `attachment; filename="${namaFile(job.meta)}"`,
         "Content-Length": buffer.length,
       });
       return res.end(buffer);
