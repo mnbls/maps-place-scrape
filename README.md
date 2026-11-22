@@ -7,6 +7,9 @@ Isi jenis tempat dan wilayah, lalu unduh Excel-nya. Tidak ada perhitungan di dal
 Mengetik `coffee` atau `kopi` otomatis mencari "coffee shop", "kafe", dan "kedai kopi", menggabungkan hasilnya,
 dan membuang duplikat. Jenis lain dicari apa adanya.
 
+Halaman panduan dan tombol unduh: https://mnbls.github.io/maps-place-scrape/ (sumbernya di folder `docs/`).
+Halaman itu hanya panduan; aplikasinya tetap dijalankan di komputer sendiri karena butuh server dan Chrome.
+
 ## Cara cepat (Windows, tanpa coding)
 
 1. Pasang [Node.js](https://nodejs.org) versi LTS dan pastikan Chrome atau Edge ada di komputer.

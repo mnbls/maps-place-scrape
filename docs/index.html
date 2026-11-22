@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>maps-place-scrape</title>
+<meta name="description" content="Mengambil daftar tempat dari Google Maps per wilayah dan menyimpannya sebagai Excel. Dijalankan di komputer sendiri.">
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --text: #1c2430; --muted: #5f6b7c; --line: #e3e7ee;
+    --accent: #0f766e; --accent-text: #ffffff; --warn-bg: #fff4d6; --warn-text: #6b4e00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12161c; --card: #1b212a; --text: #e8ecf2; --muted: #9aa7b8; --line: #2b3441;
+      --accent: #2dd4bf; --accent-text: #0a1f1c; --warn-bg: #3a2f10; --warn-text: #f2d27a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, "Segoe UI", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 16px 72px; }
+  h1 { font-size: 30px; line-height: 1.2; margin: 0 0 8px; }
+  h2 { font-size: 20px; margin: 0 0 12px; }
+  p { margin: 0 0 12px; }
+  .lead { color: var(--muted); font-size: 18px; margin-bottom: 20px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+  .btn {
+    display: inline-block; padding: 12px 20px; border-radius: 10px; font-weight: 600; text-decoration: none;
+    background: var(--accent); color: var(--accent-text);
+  }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  ol, ul { margin: 0; padding-left: 22px; }
+  li { margin-bottom: 8px; }
+  code { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; width: 34%; }
+  .warn { background: var(--warn-bg); color: var(--warn-text); border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; }
+  .warn h2 { color: inherit; }
+  a { color: var(--accent); }
+  footer { color: var(--muted); font-size: 14px; margin-top: 28px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>maps-place-scrape</h1>
+  <p class="lead">Ambil daftar tempat dari Google Maps untuk satu wilayah, simpan sebagai file Excel siap olah.</p>
+
+  <div class="actions">
+    <a class="btn" href="https://github.com/mnbls/maps-place-scrape/archive/refs/heads/main.zip">Unduh ZIP</a>
+    <a class="btn ghost" href="https://github.com/mnbls/maps-place-scrape">Lihat kode di GitHub</a>
+  </div>
+
+  <section class="card">
+    <h2>Cara pakai (Windows)</h2>
+    <ol>
+      <li>Pasang <a href="https://nodejs.org">Node.js</a> versi LTS. Pastikan Chrome atau Edge ada di komputer.</li>
+      <li>Unduh ZIP di atas, lalu ekstrak.</li>
+      <li>Klik dua kali <code>start.bat</code>. Pertama kali ia memasang kebutuhan sendiri (1-2 menit), lalu browser terbuka di <code>http://localhost:3737</code>.</li>
+      <li>Isi <strong>jenis tempat</strong> dan <strong>wilayah</strong> (satu kecamatan per pencarian), lalu klik <strong>Cari</strong>.</li>
+      <li>Chrome terbuka sendiri dan membaca Google Maps. Jangan ditutup sampai selesai (sekitar 10-30 menit per kecamatan).</li>
+      <li>Unduh Excel dari halaman itu. Hasil juga tersimpan di folder <code>hasil/</code>.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>Apa yang didapat</h2>
+    <p>Satu file Excel dengan tiga sheet: <strong>Data Mentah</strong> (teks asli dari Maps), <strong>Data Bersih</strong> (angka siap hitung), dan <strong>Keterangan</strong> (tanggal, kata kunci, arti kolom).</p>
+    <table>
+      <tr><th>Nama dan kategori</th><td>Nama tempat di Maps dan jenisnya (mis. Kafe, Kedai Kopi)</td></tr>
+      <tr><th>Rating</th><td>Rating bintang dan jumlah ulasan, sebagai angka</td></tr>
+      <tr><th>Koordinat</th><td>Lintang dan bujur (<code>lat</code>, <code>lng</code>)</td></tr>
+      <tr><th>Jam operasional</th><td>Jam buka dan tutup tiap hari, penanda buka 24 jam</td></tr>
+      <tr><th>Wilayah dan sumber</th><td>Wilayah yang dicari dan kata kunci yang menemukannya</td></tr>
+    </table>
+    <p style="margin-top:12px">Mengetik <code>coffee</code> atau <code>kopi</code> otomatis mencari "coffee shop", "kafe", dan "kedai kopi", lalu menggabungkan hasilnya tanpa duplikat.</p>
+  </section>
+
+  <section class="warn">
+    <h2>Batasan</h2>
+    <ul>
+      <li><strong>Rentang harga dan "bisa makan di tempat" biasanya kosong.</strong> Maps menyembunyikannya dari Chrome otomatis. Kolomnya tetap ada.</li>
+      <li>Hasil adalah tempat yang tampil di Maps untuk pencarian itu, bukan jaminan seluruh tempat di wilayah. Satu pencarian dibatasi sekitar 60-120 hasil.</li>
+      <li>Scraping langsung melanggar ketentuan layanan Google Maps. Pakai dengan risiko sendiri, dan sebutkan hal ini bila datanya dipakai di laporan.</li>
+      <li>Google bisa meminta verifikasi (CAPTCHA). Selesaikan di jendela Chrome yang terbuka.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Kenapa tidak bisa dipakai langsung di halaman ini?</h2>
+    <p>Halaman ini hanya panduan. Aplikasinya butuh server dan Chrome yang terbuka di komputer, yang tidak tersedia di GitHub Pages. Karena itu aplikasinya dijalankan di komputer sendiri.</p>
+  </section>
+
+  <footer>Kode sumber: <a href="https://github.com/mnbls/maps-place-scrape">github.com/mnbls/maps-place-scrape</a></footer>
+</main>
+</body>
+</html>
