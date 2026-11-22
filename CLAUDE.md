@@ -9,7 +9,7 @@ Repo: https://github.com/mnbls/maps-place-scrape (branch `main`, publik). Node.j
 Jalan dan teruji dengan Maps asli: input jenis + wilayah, "coffee"/"kopi" → 3 kata kunci digabung tanpa duplikat, koordinat, kategori,
 rating, jumlah ulasan, jam buka per hari (24 jam/lewat tengah malam), Excel 3 sheet, simpan otomatis ke `hasil/`.
 **Terbatas:** `harga_min/harga_max` dan `bisa_di_tempat` hampir selalu kosong/"Tidak diketahui" karena Maps memberi "tampilan terbatas" ke Chrome otomatis (lihat PROGRES.md).
-**Belum diputuskan pengguna:** cara mengisi harga dan bisa_di_tempat (opsi di PROGRES.md bagian "Keputusan terbuka").
+**Sudah diputuskan pengguna:** harga dan bisa_di_tempat **dibiarkan kosong** (lihat PROGRES.md "Keputusan: harga dan bisa_di_tempat"). Jangan ditanyakan ulang.
 
 ## Struktur
 

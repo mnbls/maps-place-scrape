@@ -34,13 +34,13 @@ dan opsi makan di tempat tidak muncul, bahkan untuk restoran besar. Sudah dicoba
 tautan "Lihat lainnya", klik dari daftar (bukan muat ulang). Yang tersisa di tab "Tentang" hanya "Diambil sendiri atau diantar" (bukan makan di tempat).
 Akibatnya `harga_min/harga_max` kosong dan `bisa_di_tempat` = "Tidak diketahui" di hampir semua baris.
 
-## Keputusan terbuka (menunggu pengguna)
-Cara mengisi harga dan bisa_di_tempat:
-1. **Biarkan kosong** (kolom sudah ada, jujur di Keterangan). Tanpa biaya.
-2. **Hibrida Google Places API** hanya untuk dua kolom itu (`priceRange`, `dineIn`): butuh API key dan billing; data terstruktur dan resmi.
-3. **Login Google di profil Chrome otomatis** untuk melihat apakah tampilan penuh muncul: belum terbukti, berisiko akun ditandai; pengguna harus login sendiri (disarankan akun khusus).
+## Keputusan: harga dan bisa_di_tempat (2026-11-22)
+**Dibiarkan kosong** (pilihan pengguna). Kolom tetap ada dan dijelaskan di sheet Keterangan; `bisa_di_tempat` = "Tidak diketahui".
+Opsi lain yang ditolak untuk saat ini, bila suatu hari dibutuhkan:
+- Hibrida Google Places API hanya untuk dua kolom itu (`priceRange`, `dineIn`): butuh API key dan billing; resmi dan terstruktur.
+- Login Google di profil Chrome otomatis: belum terbukti, berisiko akun ditandai; pengguna harus login sendiri.
+Jangan menanyakan ulang kecuali pengguna membukanya.
 
 ## Berikutnya
-- Pengguna memutuskan opsi di atas.
 - Uji satu kecamatan penuh tanpa "Maks." (perkiraan 10-30 menit) dan cek jumlah hasil vs batas ~120 Maps.
 - Bila wilayah padat terpotong: cari per desa.
